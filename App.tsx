@@ -156,6 +156,12 @@ const App: React.FC = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<any>(null);
 
+  const faq = [
+    { q: "Quel est le ticket d'entrée minimum ?", a: "Le ticket d'entrée pour le FCP MAKEDA Horizon est de 50 000 FCFA, tandis que Makeda Patrimoine est accessible dès 10 000 FCFA." },
+    { q: "Comment sont garantis mes fonds ?", a: "Makeda Asset Management est agréée par la COSUMAF. Vos fonds sont déposés chez un dépositaire indépendant et font l'objet d'un contrôle rigoureux." },
+    { q: "Puis-je retirer mon argent à tout moment ?", a: "Oui, la liquidité est assurée. Pour le FCP Horizon, l'horizon recommandé est de 2 ans, mais les rachats sont possibles selon les conditions du règlement." }
+  ];
+
   // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
@@ -367,15 +373,15 @@ const App: React.FC = () => {
               )}
             </div>
 
-            <div className="fixed bottom-0 left-0 right-0 p-1.5 lg:p-3 bg-black/60 backdrop-blur-xl border-t border-white/5 z-30">
-              <div className="flex gap-2 glass-morphism-dark p-1 rounded-[1.2rem] border border-white/10 focus-within:border-white/50 transition-all shadow-2xl">
+            <div className="fixed bottom-0 left-0 right-0 p-2 lg:p-4 bg-black/80 backdrop-blur-2xl border-t border-white/10 z-30">
+              <div className="flex gap-3 glass-morphism-dark p-2 rounded-[1.5rem] border border-white/20 focus-within:border-white/50 transition-all shadow-2xl max-w-4xl mx-auto">
                 <button 
                   onClick={toggleMic}
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                  className={`w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center transition-all ${
                     isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-white/5 text-white/40 hover:text-white hover:bg-white/10'
                   }`}
                 >
-                  {isListening ? <MicOff size={12} /> : <Mic size={12} />}
+                  {isListening ? <MicOff size={18} /> : <Mic size={18} />}
                 </button>
                 <textarea 
                   ref={textareaRef}
@@ -387,20 +393,20 @@ const App: React.FC = () => {
                       handleSend();
                     }
                   }}
-                  placeholder="Posez votre question..."
+                  placeholder="Posez votre question à l'expert Makeda..."
                   rows={1}
-                  className="flex-1 bg-transparent px-2 py-1.5 text-xs font-medium focus:outline-none placeholder:text-white/20 text-white resize-none max-h-32 overflow-y-auto"
+                  className="flex-1 bg-transparent px-3 py-2.5 text-sm lg:text-base font-medium focus:outline-none placeholder:text-white/20 text-white resize-none max-h-32 overflow-y-auto"
                 />
                 <button 
                   onClick={() => handleSend()}
                   disabled={!input.trim() || isTyping}
-                  className="bg-white text-black w-8 h-8 rounded-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-xl disabled:opacity-20"
+                  className="bg-white text-black w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-xl disabled:opacity-20"
                 >
-                  <Send size={14} />
+                  <Send size={18} />
                 </button>
               </div>
-              <div className="mt-1 text-center">
-                <p className="text-[7px] text-white/30 uppercase tracking-widest font-bold">Propulsé par DOULIA</p>
+              <div className="mt-2 text-center">
+                <p className="text-[8px] lg:text-[10px] text-white/30 uppercase tracking-widest font-bold">Propulsé par DOULIA • Intelligence Financière</p>
               </div>
             </div>
           </div>
@@ -440,48 +446,64 @@ const App: React.FC = () => {
         );
       case 'about':
         return (
-          <div className="p-3 lg:p-6 space-y-8 pb-32 overflow-y-auto h-full">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-center">
-              <div className="space-y-4 lg:space-y-6">
-                <div className="inline-block px-2 py-0.5 bg-white/10 rounded-full border border-white/20">
-                  <p className="text-[8px] font-bold text-white uppercase tracking-[0.2em]">À Propos</p>
+          <div className="p-4 lg:p-8 space-y-12 pb-32 overflow-y-auto h-full max-w-6xl mx-auto">
+            {/* Présentation */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+              <div className="space-y-6">
+                <div className="inline-block px-3 py-1 bg-white/10 rounded-full border border-white/20">
+                  <p className="text-[10px] font-bold text-white uppercase tracking-[0.2em]">Présentation</p>
                 </div>
-                <h2 className="text-xl lg:text-2xl font-serif font-bold text-white leading-tight">Démocratiser l'investissement en zone CEMAC</h2>
-                <p className="text-white/70 leading-relaxed text-[10px] lg:text-xs">
-                  MAKEDA Asset Management est une société de gestion d'actifs agréée par la COSUMAF (Réf: N° COSUMAF-SGP-06/2021). 
+                <h2 className="text-2xl lg:text-4xl font-serif font-bold text-white leading-tight">Makeda Asset Management : L'Excellence au service de votre Capital</h2>
+                <p className="text-white/70 leading-relaxed text-sm lg:text-base">
+                  Fondée par des experts de la finance africaine, MAKEDA Asset Management est une société de gestion d'actifs agréée par la COSUMAF (Réf: N° COSUMAF-SGP-06/2021). Nous nous positionnons comme le partenaire stratégique des investisseurs souhaitant allier performance financière et impact réel sur l'économie de la zone CEMAC.
                 </p>
-                <div className="grid grid-cols-2 gap-3 lg:gap-4">
-                  <div className="p-3 lg:p-4 glass-morphism-dark rounded-xl lg:rounded-2xl border border-white/5">
-                    <h4 className="text-lg lg:text-xl font-bold text-white mb-0.5">2021</h4>
-                    <p className="text-[8px] text-white/40 uppercase font-bold">Agrément</p>
-                  </div>
-                  <div className="p-3 lg:p-4 glass-morphism-dark rounded-xl lg:rounded-2xl border border-white/5">
-                    <h4 className="text-lg lg:text-xl font-bold text-white mb-0.5">CEMAC</h4>
-                    <p className="text-[8px] text-white/40 uppercase font-bold">Zone</p>
-                  </div>
-                </div>
+                <p className="text-white/70 leading-relaxed text-sm lg:text-base">
+                  Sous la direction de <strong>Serge Sah Ntamack</strong>, notre équipe déploie des stratégies d'investissement innovantes pour démocratiser l'accès aux marchés financiers.
+                </p>
               </div>
               <div className="relative">
-                <div className="aspect-video lg:aspect-square rounded-2xl lg:rounded-3xl overflow-hidden border-2 border-white/10 shadow-2xl">
+                <div className="aspect-video rounded-3xl overflow-hidden border-2 border-white/10 shadow-2xl">
                   <img src="https://media.licdn.com/dms/image/v2/D4E22AQGa1oMoojqxow/feedshare-shrink_800/feedshare-shrink_800/0/1729509795752?e=2147483647&v=beta&t=8emmMeeqQANTrhyQQwnfLNvt5UtvuQEedi9fxqfp0Fw" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" />
                 </div>
               </div>
             </div>
 
-            <div className="space-y-4 lg:space-y-6">
-              <h3 className="text-lg lg:text-xl font-serif font-bold text-center">Vision & Valeurs</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 lg:gap-6">
+            {/* Vision */}
+            <div className="space-y-8">
+              <div className="text-center space-y-4">
+                <h3 className="text-2xl lg:text-3xl font-serif font-bold">Notre Vision & Valeurs</h3>
+                <p className="text-white/50 max-w-2xl mx-auto text-sm">Transformer l'épargne dormante en levier de croissance pour l'Afrique Centrale.</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[
-                  { title: "Inclusion", desc: "Accessible à tous." },
-                  { title: "Transparence", desc: "Gestion rigoureuse." },
-                  { title: "Impact", desc: "Économie réelle." }
+                  { title: "Inclusion", desc: "Rendre l'investissement d'élite accessible à tous les épargnants, dès 10 000 FCFA." },
+                  { title: "Transparence", desc: "Une gestion rigoureuse sous le contrôle permanent du régulateur régional." },
+                  { title: "Impact", desc: "Financer les PME et les infrastructures pour bâtir l'avenir de la zone CEMAC." }
                 ].map((v, i) => (
-                  <div key={i} className="p-4 lg:p-6 glass-morphism-dark rounded-xl lg:rounded-2xl border border-white/5 text-center">
-                    <div className="w-8 h-8 lg:w-10 lg:h-10 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-3 lg:mb-4 text-white">
-                      <Sparkles size={16} />
+                  <div key={i} className="p-6 lg:p-8 glass-morphism-dark rounded-2xl lg:rounded-3xl border border-white/5 text-center group hover:bg-white/5 transition-all">
+                    <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 text-white group-hover:bg-white group-hover:text-black transition-all">
+                      <Sparkles size={20} />
                     </div>
-                    <h4 className="font-bold mb-1 text-xs lg:text-sm">{v.title}</h4>
-                    <p className="text-[9px] lg:text-[10px] text-white/50 leading-relaxed">{v.desc}</p>
+                    <h4 className="font-bold mb-2 text-base lg:text-lg">{v.title}</h4>
+                    <p className="text-xs lg:text-sm text-white/50 leading-relaxed">{v.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* FAQ */}
+            <div className="space-y-8">
+              <h3 className="text-2xl lg:text-3xl font-serif font-bold text-center">Questions Fréquentes (FAQ)</h3>
+              <div className="space-y-4 max-w-3xl mx-auto">
+                {faq.map((item, i) => (
+                  <div key={i} className="p-6 glass-morphism-dark rounded-2xl border border-white/5">
+                    <h4 className="font-bold text-white mb-2 flex items-center gap-2">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                      {item.q}
+                    </h4>
+                    <p className="text-white/60 text-sm leading-relaxed pl-4 border-l border-white/10">
+                      {item.a}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -632,38 +654,38 @@ const App: React.FC = () => {
       
       {/* Global Header (Chatbot Top Bar Style) */}
       {activeTab === 'home' && (
-        <header className="fixed top-0 left-0 right-0 z-[100] p-3 bg-black/60 backdrop-blur-2xl border-b border-white/10 flex justify-between items-center">
-          <div className="flex items-center gap-2">
+        <header className="fixed top-0 left-0 right-0 z-[100] p-4 lg:p-6 bg-black/80 backdrop-blur-2xl border-b border-white/10 flex justify-between items-center shadow-2xl">
+          <div className="flex items-center gap-3 lg:gap-4">
             <div className="relative">
-              <div className="w-8 h-8 rounded-full border-2 border-white/30 p-0.5 bg-black">
-                <img src={MAKEDA_BRAND.logoUrl} className="w-full h-full rounded-full object-contain" />
+              <div className="w-10 h-10 lg:w-14 lg:h-14 rounded-2xl border-2 border-white/30 p-1 bg-black shadow-inner">
+                <img src={MAKEDA_BRAND.logoUrl} className="w-full h-full rounded-xl object-contain" />
               </div>
-              <span className="absolute bottom-0.5 right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-black rounded-full"></span>
+              <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-4 border-black rounded-full"></span>
             </div>
             <div>
-              <h1 className="text-base font-serif font-bold text-white leading-none">{MAKEDA_BRAND.logoText}</h1>
-              <div className="flex items-center gap-1 mt-0.5">
-                <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></div>
-                <p className="text-[8px] text-white/40 uppercase tracking-widest font-bold">Expert actif</p>
+              <h1 className="text-lg lg:text-2xl font-serif font-bold text-white leading-none tracking-tight">{MAKEDA_BRAND.logoText}</h1>
+              <div className="flex items-center gap-2 mt-1 lg:mt-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                <p className="text-[10px] lg:text-xs text-white/40 uppercase tracking-[0.2em] font-bold">Expert IA Actif</p>
               </div>
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 lg:gap-4">
             <button 
               onClick={toggleMute}
-              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
-                isMuted ? 'bg-white/5 text-white/30' : 'bg-white text-black shadow-lg shadow-white/20'
+              className={`w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center transition-all ${
+                isMuted ? 'bg-white/5 text-white/30' : 'bg-white text-black shadow-xl shadow-white/20'
               }`}
             >
-              {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+              {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
             </button>
             
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="w-8 h-8 rounded-lg bg-white/5 text-white flex items-center justify-center hover:bg-white/10 transition-all border border-white/10"
+              className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-white/5 text-white flex items-center justify-center hover:bg-white/10 transition-all border border-white/10"
             >
-              {isMenuOpen ? <X size={18} /> : <Menu size={18} />}
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
 
@@ -681,7 +703,7 @@ const App: React.FC = () => {
                     { id: 'home', icon: <MessageSquare size={18} />, label: 'Accueil' },
                     { id: 'invest', icon: <TrendingUp size={18} />, label: 'Investir' },
                     { id: 'solutions', icon: <LayoutGrid size={18} />, label: 'Solutions' },
-                    { id: 'about', icon: <Info size={18} />, label: 'Vision' },
+                    { id: 'about', icon: <Info size={18} />, label: 'À Propos' },
                     { id: 'simulator', icon: <Calculator size={18} />, label: 'Simulateur' },
                     { id: 'contact', icon: <ContactIcon size={18} />, label: 'Contact' }
                   ].map((tab) => (
@@ -712,7 +734,7 @@ const App: React.FC = () => {
       )}
 
       {/* Main Content Area */}
-      <main className={`relative z-10 flex-1 overflow-hidden ${activeTab === 'home' ? 'pt-[64px]' : ''}`}>
+      <main className={`relative z-10 flex-1 overflow-hidden ${activeTab === 'home' ? 'pt-[88px] lg:pt-[110px]' : ''}`}>
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -729,26 +751,26 @@ const App: React.FC = () => {
 
       {/* Bottom Navigation Bar */}
       {activeTab !== 'home' && (
-        <nav className="relative z-50 bg-black/90 backdrop-blur-2xl border-t border-white/10 px-2 py-2 flex justify-around items-center">
+        <nav className="relative z-50 bg-black/95 backdrop-blur-3xl border-t border-white/10 px-4 py-4 flex justify-around items-center shadow-2xl">
           {[
-            { id: 'home', icon: <MessageSquare size={18} />, label: 'Accueil' },
-            { id: 'invest', icon: <TrendingUp size={18} />, label: 'Investir' },
-            { id: 'solutions', icon: <LayoutGrid size={18} />, label: 'Solutions' },
-            { id: 'about', icon: <Info size={18} />, label: 'Vision' },
-            { id: 'simulator', icon: <Calculator size={18} />, label: 'Simulateur' },
-            { id: 'contact', icon: <ContactIcon size={18} />, label: 'Contact' }
+            { id: 'home', icon: <MessageSquare size={20} />, label: 'Accueil' },
+            { id: 'invest', icon: <TrendingUp size={20} />, label: 'Investir' },
+            { id: 'solutions', icon: <LayoutGrid size={20} />, label: 'Solutions' },
+            { id: 'about', icon: <Info size={20} />, label: 'À Propos' },
+            { id: 'simulator', icon: <Calculator size={20} />, label: 'Simulateur' },
+            { id: 'contact', icon: <ContactIcon size={20} />, label: 'Contact' }
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex flex-col items-center gap-0.5 transition-all ${
-                activeTab === tab.id ? 'text-white scale-105' : 'text-white/40 hover:text-white/60'
+              className={`flex flex-col items-center gap-1.5 transition-all ${
+                activeTab === tab.id ? 'text-white scale-110' : 'text-white/40 hover:text-white/60'
               }`}
             >
-              <div className={`p-1.5 rounded-lg ${activeTab === tab.id ? 'bg-white/10' : ''}`}>
+              <div className={`p-2 rounded-xl ${activeTab === tab.id ? 'bg-white/10 shadow-inner' : ''}`}>
                 {tab.icon}
               </div>
-              <span className="text-[7px] font-bold uppercase tracking-widest">{tab.label}</span>
+              <span className="text-[8px] lg:text-[10px] font-bold uppercase tracking-widest">{tab.label}</span>
             </button>
           ))}
         </nav>
