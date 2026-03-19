@@ -1,7 +1,7 @@
 import React from 'react';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 
-export const InvestmentChart: React.FC<{ data: any[] }> = ({ data }) => (
+export const InvestmentChart: React.FC<{ data: { year: number; value: number }[] }> = ({ data }) => (
   <div className="h-[200px] w-full">
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart data={data}>

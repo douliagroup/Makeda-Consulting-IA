@@ -15,7 +15,6 @@ import {
   TrendingUp, 
   Briefcase,
   Mail,
-  MapPin,
   Phone,
   Sparkles,
   ChevronRight,
@@ -26,12 +25,47 @@ import {
   Info,
   Calculator,
   Contact as ContactIcon,
-  ExternalLink,
   Globe,
   Award,
   Menu,
-  X
+  X,
+  BookOpen
 } from 'lucide-react';
+
+class Particle {
+  x: number;
+  y: number;
+  size: number;
+  speedX: number;
+  speedY: number;
+  opacity: number;
+
+  constructor(width: number, height: number) {
+    this.x = Math.random() * width;
+    this.y = Math.random() * height;
+    this.size = Math.random() * 2 + 1;
+    this.speedX = (Math.random() - 0.5) * 0.3;
+    this.speedY = (Math.random() - 0.5) * 0.3;
+    this.opacity = Math.random() * 0.5 + 0.2;
+  }
+
+  update(width: number, height: number) {
+    this.x += this.speedX;
+    this.y += this.speedY;
+
+    if (this.x > width) this.x = 0;
+    else if (this.x < 0) this.x = width;
+    if (this.y > height) this.y = 0;
+    else if (this.y < 0) this.y = height;
+  }
+
+  draw(ctx: CanvasRenderingContext2D) {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`; // White
+    ctx.fill();
+  }
+}
 
 // Composant pour l'arrière-plan immersif "Labyrinthe de la Fortune"
 const BackgroundEffects: React.FC = () => {
@@ -46,41 +80,6 @@ const BackgroundEffects: React.FC = () => {
     let animationFrameId: number;
     let particles: Particle[] = [];
     const particleCount = 40;
-
-    class Particle {
-      x: number;
-      y: number;
-      size: number;
-      speedX: number;
-      speedY: number;
-      opacity: number;
-
-      constructor(width: number, height: number) {
-        this.x = Math.random() * width;
-        this.y = Math.random() * height;
-        this.size = Math.random() * 2 + 1;
-        this.speedX = (Math.random() - 0.5) * 0.3;
-        this.speedY = (Math.random() - 0.5) * 0.3;
-        this.opacity = Math.random() * 0.5 + 0.2;
-      }
-
-      update(width: number, height: number) {
-        this.x += this.speedX;
-        this.y += this.speedY;
-
-        if (this.x > width) this.x = 0;
-        else if (this.x < 0) this.x = width;
-        if (this.y > height) this.y = 0;
-        else if (this.y < 0) this.y = height;
-      }
-
-      draw(ctx: CanvasRenderingContext2D) {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`; // White
-        ctx.fill();
-      }
-    }
 
     const resize = () => {
       canvas.width = window.innerWidth;
@@ -142,14 +141,29 @@ const BackgroundEffects: React.FC = () => {
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'home' | 'solutions' | 'about' | 'simulator' | 'contact' | 'invest'>('home');
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    const saved = localStorage.getItem('makeda_chat_history');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.map((m: any) => ({ ...m, timestamp: new Date(m.timestamp) }));
+      } catch (e) {
+        console.error("Error parsing chat history:", e);
+        return [];
+      }
+    }
+    return [];
+  });
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(() => {
+    const saved = localStorage.getItem('makeda_user_profile');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [externalUrl, setExternalUrl] = useState<string | null>(null);
   
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -170,21 +184,30 @@ const App: React.FC = () => {
     }
   }, [input]);
 
+  const welcome = useCallback(async () => {
+    setIsTyping(true);
+    const welcomeMsg = userProfile 
+      ? `Bonjour ${userProfile.name || ''}. Heureux de vous revoir. Je suis prêt à poursuivre notre échange sur votre stratégie d'investissement.`
+      : "Bonjour. Je suis votre Consultant Makeda. Comment puis-je vous accompagner dans la structuration de votre patrimoine aujourd'hui ?";
+    
+    setMessages([{ role: 'model', content: welcomeMsg, timestamp: new Date() }]);
+    setIsTyping(false);
+    
+    if (!isMuted) {
+      const audio = await geminiService.generateSpeech(welcomeMsg);
+      if (audio) geminiService.playBase64Audio(audio);
+    }
+  }, [userProfile, isMuted]);
+
   // Persistence du profil et de l'historique
   useEffect(() => {
-    const savedProfile = localStorage.getItem('makeda_user_profile');
-    if (savedProfile) {
-      setUserProfile(JSON.parse(savedProfile));
+    if (messages.length === 0) {
+      const timer = setTimeout(() => {
+        welcome();
+      }, 0);
+      return () => clearTimeout(timer);
     }
-
-    const savedMessages = localStorage.getItem('makeda_chat_history');
-    if (savedMessages) {
-      const parsed = JSON.parse(savedMessages);
-      setMessages(parsed.map((m: any) => ({ ...m, timestamp: new Date(m.timestamp) })));
-    } else {
-      welcome();
-    }
-  }, []);
+  }, [welcome, messages.length]);
 
   useEffect(() => {
     if (userProfile) {
@@ -220,21 +243,6 @@ const App: React.FC = () => {
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, isTyping, activeTab]);
-
-  const welcome = async () => {
-    setIsTyping(true);
-    const welcomeMsg = userProfile 
-      ? `Bonjour ${userProfile.name || ''}. Heureux de vous revoir. Je suis prêt à poursuivre notre échange sur votre stratégie d'investissement.`
-      : "Bonjour. Je suis votre Consultant Makeda. Comment puis-je vous accompagner dans la structuration de votre patrimoine aujourd'hui ?";
-    
-    setMessages([{ role: 'model', content: welcomeMsg, timestamp: new Date() }]);
-    setIsTyping(false);
-    
-    if (!isMuted) {
-      const audio = await geminiService.generateSpeech(welcomeMsg);
-      if (audio) geminiService.playBase64Audio(audio);
-    }
-  };
 
   const handleSend = async (text?: string) => {
     const messageToSend = text || input;
@@ -292,7 +300,7 @@ const App: React.FC = () => {
             <span className="flex-shrink-0 w-6 h-6 bg-white text-black rounded-full flex items-center justify-center font-bold text-xs shadow-lg border border-white/20">
               {listMatch[1]}
             </span>
-            <div className="flex-1 pt-0.5 text-white font-medium leading-relaxed text-xs">
+            <div className="flex-1 pt-0.5 text-white font-medium leading-relaxed text-sm">
               {listMatch[2]}
             </div>
           </div>
@@ -301,7 +309,7 @@ const App: React.FC = () => {
 
       // Rendu normal avec mise en gras (sans astérisques)
       return (
-        <p key={idx} className="mb-4 text-white/90 leading-relaxed font-medium">
+        <p key={idx} className="mb-4 text-white/90 leading-relaxed font-medium text-sm">
            {trimmedLine}
         </p>
       );
@@ -353,7 +361,7 @@ const App: React.FC = () => {
                       ? 'bg-white text-black rounded-2xl rounded-tr-none px-4 py-2.5 shadow-lg' 
                       : 'bg-white/[0.02] backdrop-blur-3xl rounded-2xl rounded-tl-none px-5 py-5 shadow-xl border border-white/10'
                   }`}>
-                    <div className="text-xs leading-relaxed">
+                    <div className="text-sm leading-relaxed">
                       {msg.role === 'model' ? formatContent(msg.content) : msg.content}
                     </div>
                     <div className={`text-[8px] mt-2 font-bold uppercase tracking-widest opacity-40 ${msg.role === 'user' ? 'text-black' : 'text-white'}`}>
@@ -395,7 +403,7 @@ const App: React.FC = () => {
                   }}
                   placeholder="Posez votre question à l'expert Makeda..."
                   rows={1}
-                  className="flex-1 bg-transparent px-3 py-2.5 text-sm lg:text-base font-medium focus:outline-none placeholder:text-white/20 text-white resize-none max-h-32 overflow-y-auto"
+                  className="flex-1 bg-transparent px-3 py-2.5 text-sm lg:text-base font-medium focus:outline-none placeholder:text-white/20 placeholder:truncate text-white resize-none max-h-32 overflow-y-auto"
                 />
                 <button 
                   onClick={() => handleSend()}
@@ -641,6 +649,39 @@ const App: React.FC = () => {
                     </motion.div>
                   ))}
                 </div>
+
+                <div className="max-w-4xl mx-auto mt-12 glass-morphism-dark p-6 lg:p-10 rounded-3xl border border-white/10 space-y-8">
+                  <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+                    <BookOpen className="text-[#C5A059]" size={24} />
+                    <h3 className="text-lg lg:text-xl font-serif font-bold">Lexique Technique</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                      <h4 className="text-[#C5A059] font-bold text-sm uppercase tracking-wider">VL (Valeur Liquidative)</h4>
+                      <p className="text-white/60 text-xs leading-relaxed">
+                        C'est le prix d'une part d'un fonds (FCP ou SICAV). Elle est calculée en divisant la valeur totale des actifs du fonds par le nombre de parts en circulation. Elle permet de suivre la performance de votre investissement.
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="text-[#C5A059] font-bold text-sm uppercase tracking-wider">Obligataire (Bond)</h4>
+                      <p className="text-white/60 text-xs leading-relaxed">
+                        Un placement obligataire consiste à prêter de l'argent à un État ou une entreprise en échange d'un intérêt régulier (coupon). C'est généralement considéré comme moins risqué que les actions et offre une visibilité sur le rendement.
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="text-[#C5A059] font-bold text-sm uppercase tracking-wider">FCP (Fonds Commun de Placement)</h4>
+                      <p className="text-white/60 text-xs leading-relaxed">
+                        Une copropriété de valeurs mobilières qui n'a pas de personnalité morale. En investissant dans un FCP, vous devenez copropriétaire d'un portefeuille diversifié géré par Makeda Asset Management.
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="text-[#C5A059] font-bold text-sm uppercase tracking-wider">COSUMAF</h4>
+                      <p className="text-white/60 text-xs leading-relaxed">
+                        La Commission de Surveillance du Marché Financier de l'Afrique Centrale. C'est l'autorité de régulation qui agrée et contrôle les sociétés de gestion comme Makeda, assurant la protection des épargnants.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -653,7 +694,7 @@ const App: React.FC = () => {
       <BackgroundEffects />
       
       {/* Global Header (Chatbot Top Bar Style) */}
-      {activeTab === 'home' && (
+      {activeTab === 'home' ? (
         <header className="fixed top-0 left-0 right-0 z-[100] p-4 lg:p-6 bg-black/80 backdrop-blur-2xl border-b border-white/10 flex justify-between items-center shadow-2xl">
           <div className="flex items-center gap-3 lg:gap-4">
             <div className="relative">
@@ -731,6 +772,13 @@ const App: React.FC = () => {
             )}
           </AnimatePresence>
         </header>
+      ) : (
+        <button 
+          onClick={() => setActiveTab('home')}
+          className="fixed top-4 right-4 z-[100] w-10 h-10 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all shadow-2xl"
+        >
+          <X size={20} />
+        </button>
       )}
 
       {/* Main Content Area */}
@@ -751,7 +799,7 @@ const App: React.FC = () => {
 
       {/* Bottom Navigation Bar */}
       {activeTab !== 'home' && (
-        <nav className="relative z-50 bg-black/95 backdrop-blur-3xl border-t border-white/10 px-4 py-4 flex justify-around items-center shadow-2xl">
+        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-black/95 backdrop-blur-3xl border-t border-white/10 px-4 py-4 flex justify-around items-center shadow-2xl">
           {[
             { id: 'home', icon: <MessageSquare size={20} />, label: 'Accueil' },
             { id: 'invest', icon: <TrendingUp size={20} />, label: 'Investir' },

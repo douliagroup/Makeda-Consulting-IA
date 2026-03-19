@@ -56,8 +56,20 @@ export class GeminiService {
   }
 
   stopAudio() {
-    if (this.currentSource) { try { this.currentSource.stop(); } catch (e) {} this.currentSource = null; }
-    if (this.currentAudioContext) { this.currentAudioContext.close().catch(() => {}); this.currentAudioContext = null; }
+    if (this.currentSource) { 
+      try { 
+        this.currentSource.stop(); 
+      } catch (error) {
+        console.error("Error stopping audio source:", error);
+      } 
+      this.currentSource = null; 
+    }
+    if (this.currentAudioContext) { 
+      this.currentAudioContext.close().catch((error) => {
+        console.error("Error closing audio context:", error);
+      }); 
+      this.currentAudioContext = null; 
+    }
   }
 
   async playBase64Audio(base64: string) {
