@@ -1,10 +1,21 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { geminiService } from './services/geminiService';
-import { SimulationTool } from './components/SimulationTool';
-import { InvestorProfileModal } from './components/InvestorProfileModal';
-import { ChatMessage, UserProfile } from './types';
 import { MAKEDA_BRAND } from './constants';
+
+export interface ChatMessage {
+  role: 'user' | 'model';
+  content: string;
+  timestamp: Date;
+}
+
+export interface UserProfile {
+  name?: string;
+  email?: string;
+  objective?: string;
+  riskTolerance?: number;
+  horizon?: string;
+}
 import { 
   Send, 
   Mic, 
@@ -140,7 +151,7 @@ const BackgroundEffects: React.FC = () => {
 };
 
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'home' | 'solutions' | 'about' | 'simulator' | 'contact' | 'invest'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'solutions' | 'about' | 'contact' | 'invest'>('home');
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const saved = localStorage.getItem('makeda_chat_history');
     if (saved) {
@@ -158,7 +169,6 @@ const App: React.FC = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(() => {
     const saved = localStorage.getItem('makeda_user_profile');
@@ -188,7 +198,7 @@ const App: React.FC = () => {
     setIsTyping(true);
     const welcomeMsg = userProfile 
       ? `Bonjour ${userProfile.name || ''}. Heureux de vous revoir. Je suis prêt à poursuivre notre échange sur votre stratégie d'investissement.`
-      : "Bonjour. Je suis votre Consultant Makeda. Comment puis-je vous accompagner dans la structuration de votre patrimoine aujourd'hui ?";
+      : "Bonjour. Je suis votre Consultant Makeda. Je peux vous aider à structurer votre patrimoine, simuler vos investissements dans la zone CEMAC, ou vous conseiller sur nos produits comme le FCP Makeda Horizon et Makeda Patrimoine. Comment puis-je vous accompagner aujourd'hui ?";
     
     setMessages([{ role: 'model', content: welcomeMsg, timestamp: new Date() }]);
     setIsTyping(false);
@@ -518,18 +528,6 @@ const App: React.FC = () => {
             </div>
           </div>
         );
-      case 'simulator':
-        return (
-          <div className="p-3 lg:p-6 space-y-6 pb-32 overflow-y-auto h-full">
-            <div className="text-center">
-              <h2 className="text-xl lg:text-2xl font-serif font-bold text-white mb-1">Simulateur</h2>
-              <p className="text-white/50 max-w-2xl mx-auto text-[10px] lg:text-xs">Projetez la croissance de votre capital.</p>
-            </div>
-            <div className="glass-morphism-dark rounded-2xl lg:rounded-3xl p-3 lg:p-6 border border-white/5 shadow-2xl max-w-5xl mx-auto">
-              <SimulationTool />
-            </div>
-          </div>
-        );
       case 'contact':
         return (
           <div className="p-3 lg:p-6 space-y-8 pb-32 overflow-y-auto h-full">
@@ -805,7 +803,6 @@ const App: React.FC = () => {
             { id: 'invest', icon: <TrendingUp size={20} />, label: 'Investir' },
             { id: 'solutions', icon: <LayoutGrid size={20} />, label: 'Solutions' },
             { id: 'about', icon: <Info size={20} />, label: 'À Propos' },
-            { id: 'simulator', icon: <Calculator size={20} />, label: 'Simulateur' },
             { id: 'contact', icon: <ContactIcon size={20} />, label: 'Contact' }
           ].map((tab) => (
             <button
@@ -823,12 +820,6 @@ const App: React.FC = () => {
           ))}
         </nav>
       )}
-
-      <InvestorProfileModal 
-        isOpen={isProfileModalOpen} 
-        onClose={() => setIsProfileModalOpen(false)}
-        onComplete={handleProfileComplete}
-      />
     </div>
   );
 };
