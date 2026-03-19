@@ -1,6 +1,6 @@
 {
-  "name": "Consultant Makeda",
-  "description": "Agent IA de Makeda Asset Management pour l'investissement responsable en zone CEMAC. Transformez votre épargne en richesse durable.",
+  "name": "Makeda Consulting IA",
+  "description": "Expert d'élite en investissement et négociation financière de Makeda Asset Management (agrément COSUMAF-SGP-06/2021).",
   "requestFramePermissions": [
     "microphone"
   ]
