@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply antialiased bg-black text-white font-sans;
+  }
+}
+
+@layer components {
+  .glass-morphism-dark {
+    @apply bg-[#001A3D]/80 backdrop-blur-xl border border-white/10;
+  }
+}
+
+.markdown-body {
+  @apply leading-relaxed;
+}
+
+.markdown-body p {
+  @apply mb-4 last:mb-0;
+}
+
+.markdown-body strong {
+  @apply font-semibold text-[#1a1a1a];
+}
+
+.markdown-body ul {
+  @apply list-disc pl-5 mb-4 space-y-1;
+}
+
+.markdown-body ol {
+  @apply list-decimal pl-5 mb-4 space-y-1;
+}
+
+.markdown-body h1, .markdown-body h2, .markdown-body h3 {
+  @apply font-serif font-bold text-[#1a1a1a] mt-6 mb-3;
+}
+
+.markdown-body h1 { @apply text-xl; }
+.markdown-body h2 { @apply text-lg; }
+.markdown-body h3 { @apply text-base; }
+
+.markdown-body code {
+  @apply bg-[#f5f2ed] px-1.5 py-0.5 rounded text-[0.9em] font-mono;
+}
+
+.markdown-body blockquote {
+  @apply border-l-2 border-[#1a1a1a]/20 pl-4 italic text-[#1a1a1a]/70 my-4;
+}

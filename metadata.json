@@ -1,0 +1,7 @@
+{
+  "name": "Consultant Makeda",
+  "description": "Agent IA de Makeda Asset Management pour l'investissement responsable en zone CEMAC. Transformez votre épargne en richesse durable.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
