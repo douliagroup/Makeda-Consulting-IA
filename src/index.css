@@ -16,7 +16,7 @@
 
 @layer components {
   .glass-morphism-dark {
-    @apply bg-[#001A3D]/40 backdrop-blur-[20px] border border-white/10;
+    @apply bg-[#001A3D]/95 backdrop-blur-[20px] border border-white/10;
   }
 
   .light .glass-morphism-dark {
