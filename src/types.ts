@@ -25,4 +25,12 @@ export interface UserProfile {
   goals?: string[];
   riskProfile?: InvestmentRisk;
   horizon?: number;
+  lastProject?: string;
+}
+
+export interface SimulationInsight {
+  type: 'Retraite' | 'Immobilier' | 'Éducation' | 'Autre';
+  timestamp: Date;
+  riskProfile: InvestmentRisk;
+  targetCapital: number;
 }

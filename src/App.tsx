@@ -142,7 +142,7 @@ const BackgroundEffects: React.FC = () => {
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'home' | 'solutions' | 'about' | 'simulator' | 'contact' | 'invest'>('home');
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    const saved = localStorage.getItem('makeda_chat_history');
+    const saved = localStorage.getItem('makeda_chat_history_v3');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -186,9 +186,16 @@ const App: React.FC = () => {
 
   const welcome = useCallback(async () => {
     setIsTyping(true);
-    const welcomeMsg = userProfile 
-      ? `Bonjour ${userProfile.name || ''}. Heureux de vous revoir. Je suis prêt à poursuivre notre échange sur votre stratégie d'investissement.`
-      : "Bonjour. Je suis votre Consultant Makeda. Comment puis-je vous accompagner dans la structuration de votre patrimoine aujourd'hui ?";
+    let welcomeMsg = "Bonjour ! Je suis votre __Consultant Makeda__, votre expert d'élite en investissement en zone __CEMAC__.\n\nJe suis ici pour vous accompagner et vous guider précisément dans les domaines suivants :\n\n1. __Simulation d'Investissement__ : Je peux projeter vos gains sur le __FCP Makeda Horizon__ ou __Makeda Patrimoine__.\n2. __Conseil Patrimonial__ : Je vous aide à structurer votre épargne pour vos projets (__retraite__, __immobilier__, __éducation__).\n3. __Analyse de Marché__ : Je vous explique le fonctionnement du marché financier de la CEMAC et nos produits agréés __COSUMAF__.\n4. __Diagnostic de Profil__ : Nous pouvons évaluer ensemble votre tolérance au risque et vos objectifs.\n\nComment puis-je vous aider à faire fructifier votre capital aujourd'hui ?";
+    
+    if (userProfile?.name) {
+      welcomeMsg = `Ravi de vous revoir __${userProfile.name}__. `;
+      if (userProfile.lastProject) {
+        welcomeMsg += `Où en sommes-nous pour votre projet de __${userProfile.lastProject}__ ?\n\nJe reste à votre disposition pour :\n1. Affiner votre __simulation__.\n2. Explorer une nouvelle __solution d'investissement__.\n3. Répondre à vos questions techniques.`;
+      } else {
+        welcomeMsg += `Je suis prêt à vous guider dans vos __simulations__ ou la structuration de votre __patrimoine__. Par quoi souhaitez-vous commencer ?`;
+      }
+    }
     
     setMessages([{ role: 'model', content: welcomeMsg, timestamp: new Date() }]);
     setIsTyping(false);
@@ -217,7 +224,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (messages.length > 0) {
-      localStorage.setItem('makeda_chat_history', JSON.stringify(messages));
+      localStorage.setItem('makeda_chat_history_v3', JSON.stringify(messages));
     }
   }, [messages]);
 
@@ -252,6 +259,16 @@ const App: React.FC = () => {
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setIsTyping(true);
+
+    // AJOUT 2 : KYC Conversationnel & Mémoire
+    const extracted = await geminiService.extractUserInfo(messageToSend);
+    if (extracted.name || extracted.project) {
+      setUserProfile(prev => ({
+        ...prev,
+        name: extracted.name || prev?.name,
+        lastProject: extracted.project || prev?.lastProject
+      }));
+    }
 
     const response = await geminiService.sendMessage(messageToSend);
     setMessages(prev => [...prev, { role: 'model', content: response, timestamp: new Date() }]);
@@ -295,24 +312,39 @@ const App: React.FC = () => {
       // Détection des listes numérotées pour les bulles
       const listMatch = trimmedLine.match(/^(\d+)\.\s(.*)/);
       if (listMatch) {
+        const text = listMatch[2];
         return (
           <div key={idx} className="flex gap-3 my-4 items-start">
-            <span className="flex-shrink-0 w-6 h-6 bg-white text-black rounded-full flex items-center justify-center font-bold text-xs shadow-lg border border-white/20">
+            <span className="flex-shrink-0 w-5 h-5 bg-white text-black rounded-full flex items-center justify-center font-bold text-[10px] shadow-lg border border-white/20">
               {listMatch[1]}
             </span>
             <div className="flex-1 pt-0.5 text-white font-medium leading-relaxed text-sm">
-              {listMatch[2]}
+              {renderBoldText(text)}
             </div>
           </div>
         );
       }
 
-      // Rendu normal avec mise en gras (sans astérisques)
+      // Rendu normal avec mise en gras
       return (
         <p key={idx} className="mb-4 text-white/90 leading-relaxed font-medium text-sm">
-           {trimmedLine}
+           {renderBoldText(trimmedLine)}
         </p>
       );
+    });
+  };
+
+  const renderBoldText = (text: string) => {
+    // Handle both ** and __ for bolding
+    const parts = text.split(/(\*\*.*?\*\*|__.*?__)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={i} className="font-bold text-white">{part.slice(2, -2)}</strong>;
+      }
+      if (part.startsWith('__') && part.endsWith('__')) {
+        return <strong key={i} className="font-bold text-white">{part.slice(2, -2)}</strong>;
+      }
+      return part;
     });
   };
 
@@ -347,7 +379,7 @@ const App: React.FC = () => {
           <div className="flex flex-col h-full">
             <div 
               ref={scrollRef}
-              className="flex-1 overflow-y-auto p-3 lg:p-6 space-y-4 lg:space-y-6 scroll-smooth pb-24 m-2 lg:m-4 rounded-2xl lg:rounded-3xl border border-white/10 bg-transparent backdrop-blur-[2px] shadow-2xl"
+              className="flex-1 overflow-y-auto p-3 lg:p-6 space-y-4 lg:space-y-6 scroll-smooth pb-32 m-2 lg:m-4 rounded-2xl lg:rounded-3xl border border-white/10 bg-transparent backdrop-blur-[2px] shadow-2xl"
             >
               {messages.map((msg, i) => (
                 <motion.div 
@@ -690,99 +722,90 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col overflow-hidden font-sans text-white bg-black">
+    <div className="relative h-screen flex flex-col overflow-hidden font-sans text-white bg-black">
       <BackgroundEffects />
       
-      {/* Global Header (Chatbot Top Bar Style) */}
-      {activeTab === 'home' ? (
-        <header className="fixed top-0 left-0 right-0 z-[100] p-4 lg:p-6 bg-black/80 backdrop-blur-2xl border-b border-white/10 flex justify-between items-center shadow-2xl">
-          <div className="flex items-center gap-3 lg:gap-4">
-            <div className="relative">
-              <div className="w-10 h-10 lg:w-14 lg:h-14 rounded-2xl border-2 border-white/30 p-1 bg-black shadow-inner">
-                <img src={MAKEDA_BRAND.logoUrl} className="w-full h-full rounded-xl object-contain" />
-              </div>
-              <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-4 border-black rounded-full"></span>
+      {/* Global Header (Chatbot Top Bar Style) - ALWAYS FIXED */}
+      <header className="flex-none z-[100] p-4 lg:p-6 bg-black/80 backdrop-blur-2xl border-b border-white/10 flex justify-between items-center shadow-2xl">
+        <div className="flex items-center gap-3 lg:gap-4">
+          <div className="relative">
+            <div className="w-10 h-10 lg:w-14 lg:h-14 rounded-2xl border-2 border-white/30 p-1 bg-black shadow-inner">
+              <img src={MAKEDA_BRAND.logoUrl} className="w-full h-full rounded-xl object-contain" />
             </div>
-            <div>
-              <h1 className="text-lg lg:text-2xl font-serif font-bold text-white leading-none tracking-tight">{MAKEDA_BRAND.logoText}</h1>
-              <div className="flex items-center gap-2 mt-1 lg:mt-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                <p className="text-[10px] lg:text-xs text-white/40 uppercase tracking-[0.2em] font-bold">Expert IA Actif</p>
-              </div>
+            <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-4 border-black rounded-full"></span>
+          </div>
+          <div>
+            <h1 className="text-lg lg:text-2xl font-serif font-bold text-white leading-none tracking-tight">{MAKEDA_BRAND.logoText}</h1>
+            <div className="flex items-center gap-2 mt-1 lg:mt-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+              <p className="text-[10px] lg:text-xs text-white/40 uppercase tracking-[0.2em] font-bold">Expert IA Actif</p>
             </div>
           </div>
+        </div>
+        
+        <div className="flex items-center gap-3 lg:gap-4">
+          <button 
+            onClick={toggleMute}
+            className={`w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center transition-all ${
+              isMuted ? 'bg-white/5 text-white/30' : 'bg-white text-black shadow-xl shadow-white/20'
+            }`}
+          >
+            {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+          </button>
           
-          <div className="flex items-center gap-3 lg:gap-4">
-            <button 
-              onClick={toggleMute}
-              className={`w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center transition-all ${
-                isMuted ? 'bg-white/5 text-white/30' : 'bg-white text-black shadow-xl shadow-white/20'
-              }`}
-            >
-              {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-            </button>
-            
-            <button 
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-white/5 text-white flex items-center justify-center hover:bg-white/10 transition-all border border-white/10"
-            >
-              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
+          <button 
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-white/5 text-white flex items-center justify-center hover:bg-white/10 transition-all border border-white/10"
+          >
+            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
 
-          {/* Hamburger Menu Overlay */}
-          <AnimatePresence>
-            {isMenuOpen && (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95, y: -20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: -20 }}
-                className="absolute top-full right-6 mt-4 w-64 glass-morphism-dark border border-white/10 rounded-3xl shadow-2xl overflow-hidden z-[60]"
-              >
-                <div className="p-4 space-y-2">
-                  {[
-                    { id: 'home', icon: <MessageSquare size={18} />, label: 'Accueil' },
-                    { id: 'invest', icon: <TrendingUp size={18} />, label: 'Investir' },
-                    { id: 'solutions', icon: <LayoutGrid size={18} />, label: 'Solutions' },
-                    { id: 'about', icon: <Info size={18} />, label: 'À Propos' },
-                    { id: 'simulator', icon: <Calculator size={18} />, label: 'Simulateur' },
-                    { id: 'contact', icon: <ContactIcon size={18} />, label: 'Contact' }
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => { setActiveTab(tab.id as any); setIsMenuOpen(false); }}
-                      className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${
-                        activeTab === tab.id ? 'bg-white text-black font-bold' : 'text-white/60 hover:bg-white/5 hover:text-white'
-                      }`}
-                    >
-                      {tab.icon}
-                      <span className="text-xs uppercase tracking-widest">{tab.label}</span>
-                    </button>
-                  ))}
-                  <div className="h-[1px] bg-white/10 my-2"></div>
-                  <button 
-                    onClick={() => { setIsProfileModalOpen(true); setIsMenuOpen(false); }}
-                    className="w-full flex items-center gap-4 p-4 rounded-2xl text-white/60 hover:bg-white/5 hover:text-white transition-all"
+        {/* Hamburger Menu Overlay */}
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -20 }}
+              className="absolute top-full right-6 mt-4 w-64 glass-morphism-dark border border-white/10 rounded-3xl shadow-2xl overflow-hidden z-[60]"
+            >
+              <div className="p-4 space-y-2">
+                {[
+                  { id: 'home', icon: <MessageSquare size={18} />, label: 'Accueil' },
+                  { id: 'invest', icon: <TrendingUp size={18} />, label: 'Investir' },
+                  { id: 'solutions', icon: <LayoutGrid size={18} />, label: 'Solutions' },
+                  { id: 'about', icon: <Info size={18} />, label: 'À Propos' },
+                  { id: 'simulator', icon: <Calculator size={18} />, label: 'Simulateur' },
+                  { id: 'contact', icon: <ContactIcon size={18} />, label: 'Contact' }
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => { setActiveTab(tab.id as any); setIsMenuOpen(false); }}
+                    className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${
+                      activeTab === tab.id ? 'bg-white text-black font-bold' : 'text-white/60 hover:bg-white/5 hover:text-white'
+                    }`}
                   >
-                    <Target size={18} />
-                    <span className="text-xs uppercase tracking-widest">Profil Investisseur</span>
+                    {tab.icon}
+                    <span className="text-xs uppercase tracking-widest">{tab.label}</span>
                   </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </header>
-      ) : (
-        <button 
-          onClick={() => setActiveTab('home')}
-          className="fixed top-4 right-4 z-[100] w-10 h-10 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all shadow-2xl"
-        >
-          <X size={20} />
-        </button>
-      )}
+                ))}
+                <div className="h-[1px] bg-white/10 my-2"></div>
+                <button 
+                  onClick={() => { setIsProfileModalOpen(true); setIsMenuOpen(false); }}
+                  className="w-full flex items-center gap-4 p-4 rounded-2xl text-white/60 hover:bg-white/5 hover:text-white transition-all"
+                >
+                  <Target size={18} />
+                  <span className="text-xs uppercase tracking-widest">Profil Investisseur</span>
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </header>
 
-      {/* Main Content Area */}
-      <main className={`relative z-10 flex-1 overflow-hidden ${activeTab === 'home' ? 'pt-[88px] lg:pt-[110px]' : ''}`}>
+      {/* Main Content Area - SCROLLABLE */}
+      <main className="relative z-10 flex-1 overflow-y-auto overflow-x-hidden">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -797,9 +820,9 @@ const App: React.FC = () => {
         </AnimatePresence>
       </main>
 
-      {/* Bottom Navigation Bar */}
+      {/* Bottom Navigation Bar - ALWAYS FIXED (HIDDEN ON HOME) */}
       {activeTab !== 'home' && (
-        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-black/95 backdrop-blur-3xl border-t border-white/10 px-4 py-4 flex justify-around items-center shadow-2xl">
+        <nav className="flex-none z-50 bg-black/95 backdrop-blur-3xl border-t border-white/10 px-2 lg:px-4 py-3 lg:py-4 flex justify-around items-center shadow-2xl">
           {[
             { id: 'home', icon: <MessageSquare size={20} />, label: 'Accueil' },
             { id: 'invest', icon: <TrendingUp size={20} />, label: 'Investir' },
@@ -811,14 +834,14 @@ const App: React.FC = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex flex-col items-center gap-1.5 transition-all ${
-                activeTab === tab.id ? 'text-white scale-110' : 'text-white/40 hover:text-white/60'
+              className={`flex flex-col items-center gap-1 transition-all ${
+                activeTab === tab.id ? 'text-white scale-105' : 'text-white/40 hover:text-white/60'
               }`}
             >
               <div className={`p-2 rounded-xl ${activeTab === tab.id ? 'bg-white/10 shadow-inner' : ''}`}>
                 {tab.icon}
               </div>
-              <span className="text-[8px] lg:text-[10px] font-bold uppercase tracking-widest">{tab.label}</span>
+              <span className="text-[7px] lg:text-[10px] font-bold uppercase tracking-widest">{tab.label}</span>
             </button>
           ))}
         </nav>

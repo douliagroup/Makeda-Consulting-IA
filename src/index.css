@@ -16,19 +16,26 @@
 
 @layer components {
   .glass-morphism-dark {
-    @apply bg-[#001A3D]/80 backdrop-blur-xl border border-white/10;
+    @apply bg-[#001A3D]/40 backdrop-blur-[20px] border border-white/10;
   }
 
   .light .glass-morphism-dark {
-    @apply bg-white/80 border-black/5 text-[#141414];
+    @apply bg-white/40 border-black/5 text-[#141414];
   }
 
   .glass-morphism-gold {
-    @apply bg-[#C5A059]/10 backdrop-blur-md border border-[#C5A059]/30;
+    @apply bg-[#C5A059]/10 backdrop-blur-[20px] border border-[#C5A059]/30;
   }
 
-  .light .glass-morphism-gold {
-    @apply bg-[#C5A059]/5 border-[#C5A059]/20;
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient 8s ease infinite;
+  }
+
+  @keyframes gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
 }
 
@@ -54,6 +61,14 @@
 
 .markdown-body ol {
   @apply list-decimal pl-5 mb-4 space-y-1;
+}
+
+.markdown-body ol li::marker {
+  @apply text-[0.85em] font-bold text-white/50;
+}
+
+.light .markdown-body ol li::marker {
+  @apply text-black/30;
 }
 
 .markdown-body h1, .markdown-body h2, .markdown-body h3 {
